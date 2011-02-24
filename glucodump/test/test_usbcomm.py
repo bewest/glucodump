@@ -68,7 +68,7 @@ class FakeUSB(object):
 class TestUSBComm(object):
     usbdata = [
         'ABC\x3c\x04\x021H|\\^&||uv'
-        'mja4|Bayer7390^0'
+        'mjq4|Bayer7390^0'
         '1.20\\01.04\\04.02'
         '.19^7390-1163170',
 
@@ -89,10 +89,10 @@ class TestUSBComm(object):
         ]
 
     dataread = \
-        '\x04\x021H|\\^&||uvmja4|Bayer7390^01.20\\01.04\\04.02.19^7390-1163170'\
+        '\x04\x021H|\\^&||uvmjq4|Bayer7390^01.20\\01.04\\04.02.19^7390-1163170'\
         '^7396-|A=1^C=63^G=1^I=0200^R=0^S=1^U=1^V=10600^X=07007007009' \
         '9180135180248^Y=360126090050099050300089^Z=1|209||||||1|2011' \
-        '02142249\x0d\x17\x36\x35\x0d\x0a\x05'
+        '02142249\x0d\x1765\x0d\x0a\x05'
 
     def setup_class(self):
         self._usb = usbcomm.usb
