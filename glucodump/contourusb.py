@@ -113,3 +113,37 @@ class BayerCOMM(object):
         if data[-1] != '\x06':
             return None
         return data[:-1]
+
+
+class ContourUSB(object):
+    "Class that knows how to parse data from Countour USB meter"
+
+    def __init__(self):
+        pass
+
+    def record(self, text):
+        rectype = text[0]
+        fn = getattr(self, 'record_' + rectype)
+        if fn:
+            fn(text)
+
+    def record_H(self, text):
+        self.field_sep = text[1]
+        self.repeat_sep = text[2]
+        self.comp_sep = text[3]
+        self.escape_sep = text[4]
+        
+        fields = text[6:].split(self.field_sep)
+
+        self.password = fields[1]
+
+        (self.meter_product, versions,
+         self.meter_serial, self.meter_sku) = fields[2].split(self.comp_sep)
+        self.meter_version = versions.split(self.repeat_sep)
+
+        self.device_info = dict(i.split('=') for i in fields[3].split(self.comp_sep))
+        self.result_count = int(fields[4])
+        self.processing_id = fields[9]
+        self.spec_version = fields[10]
+        self.header_datetime = fields[11]
+        

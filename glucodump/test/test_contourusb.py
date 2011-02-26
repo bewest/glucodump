@@ -140,3 +140,34 @@ class TestBayerCOMM(object):
         res = bc.command('M|')
         assert res == 'D|0|\r\n'
         
+class TestContourUSB(object):
+    def test_H(self):
+        data = 'H|\\^&||uvmjq4|Bayer7390^01.20\\01.04\\04.02.19^7390-1163170'\
+            '^7396-|A=1^C=63^G=1^I=0200^R=0^S=1^U=1^V=10600^X=07007007009' \
+            '9180135180248^Y=360126090050099050300089^Z=1|209||||||1|2011' \
+            '02142249'
+
+        cu = contourusb.ContourUSB()
+        cu.record(data)
+
+        assert cu.field_sep == '|'
+        assert cu.repeat_sep == '\\'
+        assert cu.comp_sep == '^'
+        assert cu.escape_sep == '&'
+
+        assert cu.password == 'uvmjq4'
+        assert cu.meter_product == 'Bayer7390'
+        assert cu.meter_version == [ '01.20', '01.04', '04.02.19' ]
+        assert cu.meter_serial == '7390-1163170'
+        assert cu.meter_sku == '7396-'
+
+        assert cu.device_info == { 'A': '1', 'C': '63', 'G': '1', 'I': '0200',
+                                   'R': '0', 'S': '1', 'U': '1', 'V': '10600',
+                                   'X': '070070070099180135180248',
+                                   'Y': '360126090050099050300089', 'Z': '1'
+                                   }
+        assert cu.result_count == 209
+        assert cu.processing_id == ''
+        assert cu.spec_version == '1'
+        assert cu.header_datetime == '201102142249'
+                                   
