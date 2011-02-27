@@ -114,12 +114,40 @@ class BayerCOMM(object):
             return None
         return data[:-1]
 
+class Result(object):
+    is_control = False
 
 class ContourUSB(object):
     "Class that knows how to parse data from Countour USB meter"
 
+    referencemap = { 'B' : 'whole blood', 'P' : 'plasma', 'C' : 'capillary',
+                     'D' : 'deproteinized whole blood' }
+    resultflagmap = {
+        '<' : 'result low', '>' : 'result high', 'C' : 'control',
+        'B' : 'before food', 'A' : 'after food', 'D' : "don't feel right",
+        'I' : 'sick', 'S' : 'stress', 'X' : 'activity',
+        'Z1' : '0.25 hours after food',
+        'Z2' : '0.50 hours after food',
+        'Z3' : '0.75 hours after food',
+        'Z4' : '1.00 hours after food',
+        'Z5' : '1.25 hours after food',
+        'Z6' : '1.50 hours after food',
+        'Z7' : '1.75 hours after food',
+        'Z8' : '2.00 hours after food',
+        'Z9' : '2.25 hours after food',
+        'ZA' : '2.50 hours after food',
+        'ZB' : '2.75 hours after food',
+        'ZC' : '3.00 hours after food',
+        }
+
     def __init__(self):
-        pass
+        self.field_sep = '|'
+        self.repeat_sep = '\\'
+        self.comp_sep = '^'
+        self.escape_sep = '&'
+
+        self.result = {}
+        self.results = False
 
     def record(self, text):
         rectype = text[0]
@@ -147,3 +175,32 @@ class ContourUSB(object):
         self.spec_version = fields[10]
         self.header_datetime = fields[11]
         
+    def record_P(self, text):
+        self.patient_info = int(text.split(self.field_sep)[1])
+
+    def record_O(self, text):
+        res = text.split(self.field_sep)
+        recno = int(res[1])
+        if recno not in self.result:
+            self.result[recno] = Result()
+
+        if len(res) >= 12:
+            if res[11] == 'Q':
+                self.result[recno].is_control = True
+
+    def record_R(self, text):
+        res = text.split(self.field_sep)
+        recno = int(res[1])
+        result = self.result.setdefault(recno, Result())
+
+        result.meastype = res[2].split(self.comp_sep)[3]
+        result.value = float(res[3])
+        result.unit, result.method = res[4].split(self.comp_sep)
+        result.method = self.referencemap[result.method]
+        result.resultflags = set(self.resultflagmap[x] for x in res[6].split(self.repeat_sep))
+        result.testtime = res[8]
+
+    def record_L(self, text):
+        res = text.split(self.field_sep)
+        if res[3] == 'N':
+            self.results = True

@@ -171,3 +171,32 @@ class TestContourUSB(object):
         assert cu.spec_version == '1'
         assert cu.header_datetime == '201102142249'
                                    
+    def test_P(self):
+        cu = contourusb.ContourUSB()
+        cu.record('P|1')
+
+        assert cu.patient_info == 1
+
+    def test_O(self):
+        cu = contourusb.ContourUSB()
+        cu.record('O|1')
+
+        assert not cu.result[1].is_control
+
+        cu.record('O|2||||||||||Q')
+
+        assert cu.result[2].is_control
+
+    def test_R(self):
+        cu = contourusb.ContourUSB()
+        cu.record('R|1|^^^Glucose|2.8|mmol/L^P||B||201012142048')
+
+        assert (cu.result[1].value - 2.8) < 0.0001 # Floats!
+        assert cu.result[1].unit == 'mmol/L'
+        assert cu.result[1].testtime == '201012142048'
+
+    def test_L(self):
+        cu = contourusb.ContourUSB()
+        assert cu.results == False
+        cu.record('L|1||N')
+        assert cu.results == True
