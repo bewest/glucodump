@@ -88,6 +88,14 @@ class TestBayerCOMM(object):
         results = list(bc.sync())
         assert len(results) == 10
 
+    def test_checksum(self):
+        dataread = ['\x04\x05', '\x021R|67|^^^Glucose|7.9|mmol/L^P||B||201011281949\r\x1704\r\n', '\x04']
+        expected = [ 'R|67|^^^Glucose|7.9|mmol/L^P||B||201011281949' ]
+        f = FakeMeter(read=dataread)
+        bc = contourusb.BayerCOMM(f)        
+        results = list(bc.sync())
+        assert results == expected
+
     def test_state(self):
         dataread = [ '\x04\x05', 
                      '\x021G\r\x179C\r\n',
@@ -190,10 +198,19 @@ class TestContourUSB(object):
     def test_R(self):
         cu = contourusb.ContourUSB()
         cu.record('R|1|^^^Glucose|2.8|mmol/L^P||B||201012142048')
-
         assert (cu.result[1].value - 2.8) < 0.0001 # Floats!
         assert cu.result[1].unit == 'mmol/L'
         assert cu.result[1].testtime == '201012142048'
+
+        cu.record('R|5|^^^Glucose|10.1|mmol/L^P||||201011131409')
+        assert (cu.result[5].value - 10.1) < 0.0001 # Floats!
+        assert cu.result[5].unit == 'mmol/L'
+        assert cu.result[5].testtime == '201011131409'
+
+        cu.record('R|81|^^^Glucose|11.5|mmol/L^P||A/Z1||201012272001')
+        assert (cu.result[81].value - 11.5) < 0.0001 # Floats!
+        expected = set([cu.resultflagmap['A'], cu.resultflagmap['Z1']])
+        assert set(cu.result[81].resultflags) == expected
 
     def test_L(self):
         cu = contourusb.ContourUSB()

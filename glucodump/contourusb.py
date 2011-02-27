@@ -35,17 +35,21 @@ class BayerCOMM(object):
         self.state = None
 
     def checksum(self, text):
-        return hex(sum(ord(c) for c in text) % 256)[-2:].upper()
+        checksum = hex(sum(ord(c) for c in text) % 256).upper().split('X')[1]
+        return ('00' + checksum)[-2:]
 
     def checkframe(self, frame):
         match = self.framere.match(frame)
         if not match:
+            print '*** No RE match'
             return None # invalid frame
         if int(match.group('recno')) != self.currecno:
+            print '*** Bad recno'
             return None
 
         checksum = self.checksum(match.group('check'))
         if checksum != match.group('checksum'):
+            print '*** Checksum mismatch: %s %s' % (checksum, match.group('checksum'))
             return None
 
         self.currecno = (self.currecno + 1) % 8
@@ -197,7 +201,8 @@ class ContourUSB(object):
         result.value = float(res[3])
         result.unit, result.method = res[4].split(self.comp_sep)
         result.method = self.referencemap[result.method]
-        result.resultflags = set(self.resultflagmap[x] for x in res[6].split(self.repeat_sep))
+        # XXX bug in meter? should probably use '\' as repeat separator
+        result.resultflags = [self.resultflagmap[x] for x in res[6].split('/') if x]
         result.testtime = res[8]
 
     def record_L(self, text):
