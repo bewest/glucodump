@@ -53,6 +53,9 @@ class USBComm(object):
         if dev.is_kernel_driver_active(interface.index):
             dev.detach_kernel_driver(interface.index)
 
+        interface.set_altsetting()
+        usb.util.claim_interface(dev, interface)
+
         self.epin = usb.util.find_descriptor(interface, bEndpointAddress=0x81)
         self.epout = usb.util.find_descriptor(interface, bEndpointAddress=0x01)
 
@@ -61,7 +64,8 @@ class USBComm(object):
         while True:
             data = self.epin.read(self.blocksize)
             dstr = data.tostring()
-            assert dstr[:3] == 'ABC'
+            #assert dstr[:3] == 'ABC'
+            print '<<<', repr(dstr)
             result.append(dstr[4:data[3]+4])
             if data[3] != self.blocksize-4:
                 break
@@ -73,4 +77,4 @@ class USBComm(object):
         while remain:
             now = remain[:self.blocksize-4]
             remain = remain[self.blocksize-4:]
-            self.epout.write('\0\0\0' + chr(len(now)) + now)
+            self.epout.write('\0\0\0' + chr(len(now)) + now) # + ('\0' * (self.blocksize - 4 - len(now))))
