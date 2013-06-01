@@ -43,6 +43,9 @@ class USBComm(object):
     
     def __init__(self, **kw):
         dev = usb.core.find(**kw)
+        self.dev = dev
+        self.product = kw['idProduct']
+        self.vendor = kw['idVendor']
         try:
             dev.set_configuration()
         except usb.core.USBError:
@@ -55,10 +58,14 @@ class USBComm(object):
 
         interface.set_altsetting()
         usb.util.claim_interface(dev, interface)
+        self.interface = interface
 
         self.epin = usb.util.find_descriptor(interface, bEndpointAddress=0x81)
         self.epout = usb.util.find_descriptor(interface, bEndpointAddress=0x01)
 
+    def close(self):
+        usb.util.release_interface(self.dev, self.interface)
+        usb.util.dispose_resources(self.dev)
     def read(self):
         result = []
         while True:

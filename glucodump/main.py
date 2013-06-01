@@ -14,6 +14,7 @@ def main(argv):
     for resno, res in cu.result.items():
         print '%s: %s %.1f %s %s' % (resno, res.testtime, res.value, res.unit,
                                ', '.join(res.resultflags))
+    uc.close( )
 
 if __name__ == '__main__':
     import sys
