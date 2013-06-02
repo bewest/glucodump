@@ -140,3 +140,6 @@ class Stream(object):
     finally:
       self.close()
 
+if __name__ == '__main__':
+  s = Stream( )
+  s.run( )
